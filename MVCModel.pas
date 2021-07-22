@@ -4,11 +4,10 @@ unit MVCModel;
 interface
 
 {$I mormot.defines.inc}
-
-{$ifdef FPC}
-  {$WARN 5057 off : variable does not seem to be initialized}
-  {$WARN 5091 off : variable of a managed type does not seem to be initialized}
-{$endif FPC}
+{$IFDEF FPC}
+{$WARN 5057 off : variable does not seem to be initialized}
+{$WARN 5091 off : variable of a managed type does not seem to be initialized}
+{$ENDIF FPC}
 
 uses
   sysutils,
@@ -33,16 +32,11 @@ type
     fLanguage: RawUtf8;
     fAbout: RawUtf8;
   published
-    property Title: RawUtf8
-      index 80 read fTitle write fTitle;
-    property Language: RawUtf8
-      index 3 read fLanguage write fLanguage;
-    property Description: RawUtf8
-      index 120 read fDescription write fDescription;
-    property Copyright: RawUtf8
-      index 80 read fCopyright write fCopyright;
-    property About: RawUtf8
-      read fAbout write fAbout;
+    property Title: RawUtf8 index 80 read fTitle write fTitle;
+    property Language: RawUtf8 index 3 read fLanguage write fLanguage;
+    property Description: RawUtf8 index 120 read fDescription write fDescription;
+    property Copyright: RawUtf8 index 80 read fCopyright write fCopyright;
+    property About: RawUtf8 read fAbout write fAbout;
   end;
 
   TOrmTimeStamped = class(TOrm)
@@ -50,10 +44,8 @@ type
     fCreatedAt: TCreateTime;
     fModifiedAt: TModTime;
   published
-    property CreatedAt: TCreateTime
-      read fCreatedAt write fCreatedAt;
-    property ModifiedAt: TModTime
-      read fModifiedAt write fModifiedAt;
+    property CreatedAt: TCreateTime read fCreatedAt write fCreatedAt;
+    property ModifiedAt: TModTime read fModifiedAt write fModifiedAt;
   end;
 
   TOrmSomeone = class(TOrmTimeStamped)
@@ -70,27 +62,16 @@ type
     function CheckPlainPassword(const PlainPassword: RawUtf8): boolean;
     function Name: RawUtf8;
   published
-    property LogonName: RawUtf8
-      index 30 read fLogonName write fLogonName stored AS_UNIQUE;
-    property FirstName: RawUtf8
-      index 50 read fFirstName write fFirstName;
-    property FamilyName: RawUtf8
-      index 50 read fFamilyName write fFamilyName;
-    property BirthDate: TDateTime
-      read fBirthDate write fBirthDate;
-    property Email: RawUtf8
-      index 40 read fEmail write fEmail;
-    property HashedPassword: RawUtf8
-      index 64 read fHashedPassword write fHashedPassword;
-    property Verified: boolean
-      read fVerified write fVerified;
+    property LogonName: RawUtf8 index 30 read fLogonName write fLogonName stored AS_UNIQUE;
+    property FirstName: RawUtf8 index 50 read fFirstName write fFirstName;
+    property FamilyName: RawUtf8 index 50 read fFamilyName write fFamilyName;
+    property BirthDate: TDateTime read fBirthDate write fBirthDate;
+    property Email: RawUtf8 index 40 read fEmail write fEmail;
+    property HashedPassword: RawUtf8 index 64 read fHashedPassword write fHashedPassword;
+    property Verified: boolean read fVerified write fVerified;
   end;
 
-  TOrmAuthorRight = (
-    canComment,
-    canPost,
-    canDelete,
-    canAdministrate);
+  TOrmAuthorRight = (canComment, canPost, canDelete, canAdministrate);
 
   TOrmAuthorRights = set of TOrmAuthorRight;
 
@@ -98,11 +79,17 @@ type
   private
     fRights: TOrmAuthorRights;
   public
-    class procedure InitializeTable(const Server: IRestOrmServer;
-      const FieldName: RawUtf8; Options: TOrmInitializeTableOptions); override;
+    class procedure InitializeTable(const server: IRestOrmServer; const FieldName: RawUtf8;
+      Options: TOrmInitializeTableOptions); override;
   published
-    property Rights: TOrmAuthorRights
-      read fRights write fRights;
+    property Rights: TOrmAuthorRights read fRights write fRights;
+  end;
+
+  TOrmService = class(TOrmTimeStamped)
+  private
+    FName: RawUtf8;
+  published
+    property Name: RawUtf8 read FName write FName;
   end;
 
   TOrmPreRecorded = class(TOrmTimeStamped)
@@ -112,17 +99,19 @@ type
     fAuthorName: RawUtf8;
     FPhone: RawUtf8;
     FFullName: RawUtf8;
-    FDate: TDateTime;
+    FDate: TDate;
+    FTime: TTime;
+    FService: TOrmService;
   published
+
     property FullName: RawUtf8 read FFullName write FFullName;
     property Phone: RawUtf8 read FPhone write FPhone;
-    property Date: TDateTime read FDate write FDate;
+    property Date: TDate read FDate write FDate;
+    property Time: TTime read FTime write FTime;
     property Coment: RawUtf8 index 120 read FComent write FComent;
-
-    property Author: TOrmAuthor
-      read fAuthor write fAuthor;
-    property AuthorName: RawUtf8
-      index 50 read fAuthorName write fAuthorName;
+    property Service: TOrmService read FService write FService;
+    property Author: TOrmAuthor read fAuthor write fAuthor;
+    property AuthorName: RawUtf8 index 50 read fAuthorName write fAuthorName;
   end;
 
   TOrmContent = class(TOrmTimeStamped)
@@ -133,96 +122,77 @@ type
     fAuthorName: RawUtf8;
     fContentHtml: boolean;
   published
-    property Title: RawUtf8
-      index 120 read fTitle write fTitle;
-    property Content: RawUtf8
-      read fContent write fContent;
-    property ContentHtml: boolean
-      read fContentHtml write fContentHtml;
-    property Author: TOrmAuthor
-      read fAuthor write fAuthor;
-    property AuthorName: RawUtf8
-      index 50 read fAuthorName write fAuthorName;
+    property Title: RawUtf8 index 120 read fTitle write fTitle;
+    property Content: RawUtf8 read fContent write fContent;
+    property ContentHtml: boolean read fContentHtml write fContentHtml;
+    property Author: TOrmAuthor read fAuthor write fAuthor;
+    property AuthorName: RawUtf8 index 50 read fAuthorName write fAuthorName;
   end;
 
   TOrmTags = object
     Lock: IAutoLocker;
-    Lookup: array of record
-      Ident: RawUtf8;
-      Occurence: integer;
-    end;
-    OrderID: TIntegerDynArray;
-    procedure Init(const aRest: IRestOrm);
-    function Get(tagID: integer): RawUtf8;
-    procedure SaveOccurence(const aRest: IRestOrm);
-    procedure SortTagsByIdent(var Tags: TIntegerDynArray);
-    function GetAsDocVariantArray: Variant;
+    Lookup: array of record Ident: RawUtf8;
+    Occurence: integer;
   end;
 
-  TOrmArticle = class(TOrmContent)
-  private
-    fAbstract: RawUtf8;
-    fPublishedMonth: Integer;
-    fTags: TIntegerDynArray;
-  public
-    class function CurrentPublishedMonth: Integer;
-    class procedure InitializeTable(const Server: IRestOrmServer;
-      const FieldName: RawUtf8; Options: TOrmInitializeTableOptions); override;
-    procedure SetPublishedMonth(FromTime: TTimeLog);
-    // note: caller should call Tags.SaveOccurence() to update the DB
-    procedure TagsAddOrdered(aTagID: Integer; var aTags: TOrmTags);
-  published
-    property PublishedMonth: Integer
-      read fPublishedMonth write fPublishedMonth;
-    property abstract: RawUtf8
-      read fAbstract write fAbstract;
-    // "index 1" below to allow writing e.g. aArticle.DynArray(1).Delete(aIndex)
-    property Tags: TIntegerDynArray
-      index 1 read fTags write fTags;
+OrderID:
+TIntegerDynArray;
+procedure Init(const aRest: IRestOrm);
+function Get(tagID: integer): RawUtf8;
+procedure SaveOccurence(const aRest: IRestOrm);
+procedure SortTagsByIdent(var Tags: TIntegerDynArray);
+function GetAsDocVariantArray: Variant;
+end;
+
+TOrmArticle = class(TOrmContent)private fAbstract: RawUtf8;
+fPublishedMonth:
+integer;
+fTags:
+TIntegerDynArray;
+public
+  class
+  function CurrentPublishedMonth: integer;
+  class
+  procedure InitializeTable(const server: IRestOrmServer; const FieldName: RawUtf8;
+    Options: TOrmInitializeTableOptions);
+  override;
+  procedure SetPublishedMonth(FromTime: TTimeLog);
+  // note: caller should call Tags.SaveOccurence() to update the DB
+  procedure TagsAddOrdered(aTagID: integer; var aTags: TOrmTags);
+published
+  property PublishedMonth: integer read fPublishedMonth write fPublishedMonth;
+  property abstract: RawUtf8 read fAbstract write fAbstract;
+  // "index 1" below to allow writing e.g. aArticle.DynArray(1).Delete(aIndex)
+  property Tags: TIntegerDynArray index 1 read fTags write fTags;
   end;
 
-  TOrmArticleSearch = class(TOrmFTS4Porter)
-  private
-    fContent: RawUtf8;
-    fTitle: RawUtf8;
-    fAbstract: RawUtf8;
-  published
-    property Title: RawUtf8
-      read fTitle write fTitle;
-    property abstract: RawUtf8
-      read fAbstract write fAbstract;
-    property Content: RawUtf8
-      read fContent write fContent;
+  TOrmArticleSearch = class(TOrmFTS4Porter)private fContent: RawUtf8;
+  fTitle: RawUtf8;
+  fAbstract: RawUtf8;
+published
+  property Title: RawUtf8 read fTitle write fTitle;
+  property abstract: RawUtf8 read fAbstract write fAbstract;
+  property Content: RawUtf8 read fContent write fContent;
   end;
 
-  TOrmComment = class(TOrmContent)
-  private
-    fArticle: TOrmArticle;
-  published
-    property Article: TOrmArticle
-      read fArticle write fArticle;
+  TOrmComment = class(TOrmContent)private fArticle: TOrmArticle;
+published
+  property Article: TOrmArticle read fArticle write fArticle;
   end;
 
-  TOrmTag = class(TOrm)
-  private
-    fIdent: RawUtf8;
-    fOccurence: integer;
-    fCreatedAt: TCreateTime;
-  published
-    property Ident: RawUtf8
-      index 80 read fIdent write fIdent;
-    property Occurence: Integer
-      read fOccurence write fOccurence;
-    property CreatedAt: TCreateTime
-      read fCreatedAt write fCreatedAt;
+  TOrmTag = class(TOrm)private fIdent: RawUtf8;
+  fOccurence: integer;
+  fCreatedAt: TCreateTime;
+published
+  property Ident: RawUtf8 index 80 read fIdent write fIdent;
+  property Occurence: integer read fOccurence write fOccurence;
+  property CreatedAt: TCreateTime read fCreatedAt write fCreatedAt;
   end;
 
-function CreateModel: TOrmModel;
+  function CreateModel: TOrmModel;
 
-procedure DotClearFlatImport(const Rest: IRestOrm; const aFlatFile: RawUtf8;
-  var aTagsLookup: TOrmTags; const aDotClearRoot: RawUtf8;
-  const aStaticFolder: TFileName);
-
+  procedure DotClearFlatImport(const rest: IRestOrm; const aFlatFile: RawUtf8; var aTagsLookup: TOrmTags;
+    const aDotClearRoot: RawUtf8; const aStaticFolder: TFileName);
 
 implementation
 
@@ -230,24 +200,15 @@ uses
   mormot.core.buffers,
   mormot.net.client;
 
-
 function CreateModel: TOrmModel;
 begin
-  result := TOrmModel.Create([
-    TOrmBlogInfo,
-    TOrmAuthor,
-    TOrmTag,
-    TOrmArticle,
-    TOrmComment,
-    TOrmArticleSearch,
-    TOrmPreRecorded],
-    'blog');
+  result := TOrmModel.Create([TOrmBlogInfo, TOrmAuthor, TOrmTag, TOrmArticle, TOrmComment, TOrmArticleSearch,
+    TOrmPreRecorded, TOrmService], 'blog');
   TOrmArticle.AddFilterNotVoidText(['Title', 'Content']);
   TOrmComment.AddFilterNotVoidText(['Title', 'Content']);
   TOrmTag.AddFilterNotVoidText(['Ident']);
   result.Props[TOrmArticleSearch].FTS4WithoutContent(TOrmArticle);
 end;
-
 
 { TOrmSomeone }
 
@@ -269,15 +230,14 @@ begin
   fHashedPassword := Sha256(SALT + LogonName + PlainPassword);
 end;
 
-
 { TOrmAuthor }
 
-class procedure TOrmAuthor.InitializeTable(const Server: IRestOrmServer;
-  const FieldName: RawUtf8; Options: TOrmInitializeTableOptions);
+class procedure TOrmAuthor.InitializeTable(const server: IRestOrmServer; const FieldName: RawUtf8;
+  Options: TOrmInitializeTableOptions);
 var
   Auth: TOrmAuthor;
 begin
-  inherited InitializeTable(Server, FieldName, Options);
+  inherited InitializeTable(server, FieldName, Options);
   if FieldName = '' then
   begin // new table -> create default Author
     Auth := TOrmAuthor.Create;
@@ -286,18 +246,17 @@ begin
       Auth.SetPlainPassword('synopse'); // please customize it
       Auth.FamilyName := 'Synopse';
       Auth.Verified := true;
-      Auth.Rights := [Low(TOrmAuthorRight)..High(TOrmAuthorRight)];
-      Server.Add(Auth, true);
+      Auth.Rights := [Low(TOrmAuthorRight) .. High(TOrmAuthorRight)];
+      server.Add(Auth, true);
     finally
       Auth.Free;
     end;
   end;
 end;
 
-
 { TOrmArticle }
 
-class function TOrmArticle.CurrentPublishedMonth: Integer;
+class function TOrmArticle.CurrentPublishedMonth: integer;
 var
   Y, M, D: word;
 begin
@@ -305,25 +264,22 @@ begin
   result := integer(Y) * 12 + integer(M) - 1;
 end;
 
-class procedure TOrmArticle.InitializeTable(const Server: IRestOrmServer;
-  const FieldName: RawUtf8; Options: TOrmInitializeTableOptions);
+class procedure TOrmArticle.InitializeTable(const server: IRestOrmServer; const FieldName: RawUtf8;
+  Options: TOrmInitializeTableOptions);
 begin
   inherited;
-  if (FieldName = '') or
-     (FieldName = 'PublishedMonth') then
-    Server.CreateSQLIndex(TOrmArticle, 'PublishedMonth', false);
+  if (FieldName = '') or (FieldName = 'PublishedMonth') then
+    server.CreateSQLIndex(TOrmArticle, 'PublishedMonth', false);
 end;
 
 procedure TOrmArticle.SetPublishedMonth(FromTime: TTimeLog);
 begin
-  fPublishedMonth :=
-    TTimeLogBits(FromTime).Year * 12 + TTimeLogBits(FromTime).Month - 1;
+  fPublishedMonth := TTimeLogBits(FromTime).Year * 12 + TTimeLogBits(FromTime).Month - 1;
 end;
 
-procedure TOrmArticle.TagsAddOrdered(aTagID: Integer; var aTags: TOrmTags);
+procedure TOrmArticle.TagsAddOrdered(aTagID: integer; var aTags: TOrmTags);
 begin
-  if (aTagID < length(aTags.Lookup)) and
-     AddInteger(fTags, aTagID, true) then
+  if (aTagID < length(aTags.Lookup)) and AddInteger(fTags, aTagID, true) then
     with aTags.Lock.ProtectMethod do
     begin
       inc(aTags.Lookup[aTagID - 1].Occurence);
@@ -331,13 +287,11 @@ begin
     end;
 end;
 
-
 { TOrmTags }
 
 function TOrmTags.Get(tagID: integer): RawUtf8;
 begin
-  if (tagID > 0) and
-     (tagID <= Length(Lookup)) then
+  if (tagID > 0) and (tagID <= length(Lookup)) then
     result := Lookup[tagID - 1].Ident
   else
     result := '';
@@ -345,7 +299,7 @@ end;
 
 function TOrmTags.GetAsDocVariantArray: Variant;
 var
-  i, ndx: Integer;
+  i, ndx: integer;
 begin
   TDocVariant.NewFast(result);
   with Lock.ProtectMethod do
@@ -354,10 +308,8 @@ begin
       ndx := OrderID[i] - 1;
       with Lookup[ndx] do
         if Occurence > 0 then
-          TDocVariantData(result).AddItem(
-            _ObjFast(['tagID', ndx + 1,
-                      'ident', Ident,
-                      'occurence', Occurence]));
+          TDocVariantData(result).AddItem(_ObjFast(['tagID', ndx + 1, 'ident', Ident, 'occurence',
+            Occurence]));
     end;
 end;
 
@@ -369,9 +321,8 @@ begin
   Finalize(Lookup);
   if Lock = nil then
     Lock := TAutoLocker.Create;
-  with Lock.ProtectMethod,
-    TAutoFree.One(tag, TOrmTag.CreateAndFillPrepare(
-      aRest, 'order by Ident', 'RowID,Ident,Occurence')) do
+  with Lock.ProtectMethod, TAutoFree.One(tag, TOrmTag.CreateAndFillPrepare(aRest, 'order by Ident',
+    'RowID,Ident,Occurence')) do
   begin
     count := tag.FillTable.RowCount;
     if count = 0 then
@@ -403,10 +354,8 @@ var
   tag: TOrmTag;
   batch: TRestBatch;
 begin
-  with TAutoFree.Several([
-         @tag,   TOrmTag.CreateAndFillPrepare(aRest, '', 'RowID,Occurence'),
-         @batch, TRestBatch.Create(aRest, TOrmTag, 1000)]),
-       Lock.ProtectMethod do
+  with TAutoFree.Several([@tag, TOrmTag.CreateAndFillPrepare(aRest, '', 'RowID,Occurence'), @batch,
+    TRestBatch.Create(aRest, TOrmTag, 1000)]), Lock.ProtectMethod do
   begin
     while tag.FillOne do
     begin
@@ -449,37 +398,37 @@ type
     fText: RawUtf8;
     fFields: TRawUtf8DynArray;
     fJsonData: TOrmTableJsonDataArray;
-    fName: RawUtf8;
+    FName: RawUtf8;
   public
     /// compute a section content
-    constructor Create(var Text: PUtf8Char);
+    constructor Create(var text: PUtf8Char);
     /// parse a DotClear flat export text file, and create a list of sections
     // - you can later on use aList.GetObjectByName('post') as TDotClearTable
     // to access a given section
     class function Parse(const aFlatExport: RawUtf8): TRawUtf8List;
     /// the name of the section, e.g. 'category' or 'post'
-    property Name: RawUtf8 read fName;
+    property Name: RawUtf8 read FName;
   end;
 
-constructor TDotClearTable.Create(var Text: PUtf8Char);
+constructor TDotClearTable.Create(var text: PUtf8Char);
 var
   P, D: PUtf8Char;
   f, r: integer;
 begin
-  fName := GetNextItem(Text, ' ');
-  CSVToRawUtf8DynArray(Pointer(GetNextItem(Text, ']')), fFields);
+  FName := GetNextItem(text, ' ');
+  CSVToRawUtf8DynArray(pointer(GetNextItem(text, ']')), fFields);
   fFieldCount := length(fFields);
-  Text := GotoNextLine(Text);
-  P := pointer(Text);
-  while (Text <> nil) and (Text^ = '"') do
+  text := GotoNextLine(text);
+  P := pointer(text);
+  while (text <> nil) and (text^ = '"') do
   begin
-    Text := GotoNextLine(Text);
+    text := GotoNextLine(text);
     inc(fRowCount);
   end;
-  if Text = nil then
+  if text = nil then
     fText := P
   else
-    SetString(fText, PAnsiChar(P), Text - P);
+    SetString(fText, PAnsiChar(P), text - P);
   SetLength(fJsonData, fFieldCount * (fRowCount + 1));
   fData := pointer(fJsonData);
   for f := 0 to fFieldCount - 1 do
@@ -527,8 +476,7 @@ begin
         end;
       D^ := #0;
       inc(P);
-      if (P[0] = ',') and
-         (P[1] = '"') then
+      if (P[0] = ',') and (P[1] = '"') then
         inc(P, 2);
     end;
     P := GotoNextLine(P);
@@ -543,29 +491,27 @@ begin
   result := TRawUtf8List.Create(true);
   P := pointer(aFlatExport);
   repeat
-    while (P <> nil) and
-          (P^ <> '[') do
+    while (P <> nil) and (P^ <> '[') do
       P := GotoNextLine(P);
     if P = nil then
       exit;
     inc(P);
     T := TDotClearTable.Create(P);
     result.AddObject(T.Name, T);
-    //FileFromString(T.GetODSDocument,TFileName(T.Name)+'.ods');
+    // FileFromString(T.GetODSDocument,TFileName(T.Name)+'.ods');
   until P = nil;
 end;
 
-procedure DotClearFlatImport(const Rest: IRestOrm; const aFlatFile: RawUtf8;
-  var aTagsLookup: TOrmTags; const aDotClearRoot: RawUtf8;
-  const aStaticFolder: TFileName);
+procedure DotClearFlatImport(const rest: IRestOrm; const aFlatFile: RawUtf8; var aTagsLookup: TOrmTags;
+  const aDotClearRoot: RawUtf8; const aStaticFolder: TFileName);
 var
   T, tagTable, postTable: TDotClearTable;
   data, urls: TRawUtf8List;
   info: TOrmBlogInfo;
-  article: TOrmArticle;
+  Article: TOrmArticle;
   comment: TOrmComment;
   tag: TOrmTag;
-  tags: TRawUtf8DynArray;
+  Tags: TRawUtf8DynArray;
   tagID: TIDDynArray;
   tagsCount: integer;
   batch: TRestBatch;
@@ -602,168 +548,159 @@ var
   begin
     tag := href;
     with TBaseWriter.CreateOwnedStream(tmp) do
-    try
-      PB := P;
-      while P <> nil do
-      begin
-        while P^ <> ' ' do
+      try
+        PB := P;
+        while P <> nil do
+        begin
+          while P^ <> ' ' do
+            if P^ = #0 then
+              break
+            else
+              inc(P);
           if P^ = #0 then
-            break
-          else
-            inc(P);
-        if P^ = #0 then
-          break;
-        inc(P);
-        H := P; // makes compiler happy
-        if IdemPChar(P, 'HREF="') then
-        begin
-          tag := href;
-          inc(H, 6);
-        end
-        else if IdemPChar(P, 'SRC="') then
-        begin
-          tag := src;
-          inc(H, 5);
-        end
-        else
-          continue;
-        AddNoJSONEscape(PB, H - PB);
-        P := H;
-        if IdemPChar(P, 'HTTP://SYNOPSE.INFO') then
-        begin
-          AddShort('https://synopse.info');
-          inc(P, 19);
-        end
-        else if P^ = '/' then
-        begin
-          if IdemPChar(P + 1, 'POST/') then
+            break;
+          inc(P);
+          H := P; // makes compiler happy
+          if IdemPChar(P, 'HREF="') then
           begin
-            GetUrl(P + 6);
-            i := urls.IndexOf(urlnoparam);
-            if i >= 0 then
-            begin
-              AddShort('articleView?id=');
-              Add(i + 1);
-              inc(P, urlLen + 6);
-            end
-            else
-              AddString(aDotClearRoot);
+            tag := href;
+            inc(H, 6);
           end
-          else if IdemPChar(P + 1, 'PUBLIC/') then
+          else if IdemPChar(P, 'SRC="') then
           begin
-            if PublicFolder <> '' then
-            begin
-              GetUrl(P + 8);
-              FN := PublicFolder + UTF8ToString(StringReplaceChars(url, '/', PathDelim));
-              EnsureDirectoryExists(ExtractFilePath(FN));
-              if not FileExists(FN) then
-                FileFromString(HttpGet(aDotClearRoot + '/public/' + url, nil,
-                  {forceNotSocket=}true), FN);
-              AddShort('.static/public/'); // will append 'fullfilename">...'
-              inc(P, 8);
-            end
-            else
-              AddString(aDotClearRoot);
-          end;
-        end
-        else if (tag = src) and IdemPChar(P, 'HTTP') then
-        begin
-          GetUrl(P);
-          if IdemFileExts(pointer(urlnoparam), ['.JP', '.PNG', '.GIF', '.SVG']) >= 0 then
+            tag := src;
+            inc(H, 5);
+          end
+          else
+            continue;
+          AddNoJSONEscape(PB, H - PB);
+          P := H;
+          if IdemPChar(P, 'HTTP://SYNOPSE.INFO') then
           begin
-            if FindRawUtf8(notfound, url) < 0 then
+            AddShort('https://synopse.info');
+            inc(P, 19);
+          end
+          else if P^ = '/' then
+          begin
+            if IdemPChar(P + 1, 'POST/') then
             begin
-              FN := 'ext-' + Ansi7ToString(MD5(url)) + SysUtils.lowercase(ExtractFileExt
-                (UTF8ToString(urlnoparam)));
-              if not FileExists(PublicFolder + FN) then
+              GetUrl(P + 6);
+              i := urls.IndexOf(urlnoparam);
+              if i >= 0 then
               begin
-                write(urlnoparam);
-                pic := HttpGet(url, nil, {forceNotSocket=}true, @status);
-                if (status <> 200) or (pic = '') or (PosExChar(#0, pic) = 0) or
-                  {%H-}IdemPChar(pointer(pic), '<!DOCTYPE') then
+                AddShort('articleView?id=');
+                Add(i + 1);
+                inc(P, urlLen + 6);
+              end
+              else
+                AddString(aDotClearRoot);
+            end
+            else if IdemPChar(P + 1, 'PUBLIC/') then
+            begin
+              if PublicFolder <> '' then
+              begin
+                GetUrl(P + 8);
+                FN := PublicFolder + UTF8ToString(StringReplaceChars(url, '/', PathDelim));
+                EnsureDirectoryExists(ExtractFilePath(FN));
+                if not FileExists(FN) then
+                  FileFromString(HttpGet(aDotClearRoot + '/public/' + url, nil,
+                    { forceNotSocket= } true), FN);
+                AddShort('.static/public/'); // will append 'fullfilename">...'
+                inc(P, 8);
+              end
+              else
+                AddString(aDotClearRoot);
+            end;
+          end
+          else if (tag = src) and IdemPChar(P, 'HTTP') then
+          begin
+            GetUrl(P);
+            if IdemFileExts(pointer(urlnoparam), ['.JP', '.PNG', '.GIF', '.SVG']) >= 0 then
+            begin
+              if FindRawUtf8(notfound, url) < 0 then
+              begin
+                FN := 'ext-' + Ansi7ToString(MD5(url)) +
+                  sysutils.lowercase(ExtractFileExt(UTF8ToString(urlnoparam)));
+                if not FileExists(PublicFolder + FN) then
                 begin
-                  if {%H-}IdemPChar(pointer(url), 'HTTP:') then
+                  write(urlnoparam);
+                  pic := HttpGet(url, nil, { forceNotSocket= } true, @status);
+                  if (status <> 200) or (pic = '') or (PosExChar(#0, pic) = 0) or
+{%H-}IdemPChar(pointer(pic), '<!DOCTYPE') then
                   begin
-                    pic := url;
-                    insert('s', pic, 5);
-                    write(' https? ');
-                    pic := HttpGet(pic, nil, {forceNotSocket=}true, @status);
-                    if (status <> 200) or (pic = '') or (PosExChar(#0, pic) = 0)
-                      or                       {%H-}IdemPChar(pointer(pic),
-                      '<!DOCTYPE') then
-                      pic := '';
+                    if {%H-}IdemPChar(pointer(url), 'HTTP:') then
+                    begin
+                      pic := url;
+                      insert('s', pic, 5);
+                      write(' https? ');
+                      pic := HttpGet(pic, nil, { forceNotSocket= } true, @status);
+                      if (status <> 200) or (pic = '') or (PosExChar(#0, pic) = 0) or
+{%H-}IdemPChar(pointer(pic), '<!DOCTYPE') then
+                        pic := '';
+                    end;
+                  end;
+                  if pic = '' then
+                  begin
+                    AddRawUtf8(notfound, url);
+                    writeln(': KO (', status, ')');
+                  end
+                  else
+                  begin
+                    writeln(': ', status, ' = ', FN);
+                    FileFromString(pic, PublicFolder + FN);
                   end;
                 end;
-                if pic = '' then
-                begin
-                  AddRawUtf8(notfound, url);
-                  writeln(': KO (', status, ')');
-                end
-                else
-                begin
-                  writeln(': ', status, ' = ', FN);
-                  FileFromString(pic, PublicFolder + FN);
-                end;
+                AddShort('.static/public/');
+                AddNoJSONEscapeString(FN);
+                inc(P, urlLen);
               end;
-              AddShort('.static/public/');
-              AddNoJSONEscapeString(FN);
-              inc(P, urlLen);
             end;
           end;
+          PB := P;
         end;
-        PB := P;
+        AddNoJSONEscape(PB);
+        SetText(result);
+      finally
+        Free;
       end;
-      AddNoJSONEscape(PB);
-      SetText(result);
-    finally
-      Free;
-    end;
   end;
 
 var
-  {%H-}auto1, {%H-}auto2: IAutoFree; // mandatory only for FPC
+{%H-}auto1, {%H-}auto2: IAutoFree; // mandatory only for FPC
 begin
   if aStaticFolder <> '' then
   begin
-    PublicFolder :=
-      IncludeTrailingPathDelimiter(aStaticFolder) + 'public' + PathDelim;
+    PublicFolder := IncludeTrailingPathDelimiter(aStaticFolder) + 'public' + PathDelim;
     EnsureDirectoryExists(PublicFolder);
     HTTP_DEFAULT_RESOLVETIMEOUT := 1000; // don't wait forever
     HTTP_DEFAULT_CONNECTTIMEOUT := 1000;
     HTTP_DEFAULT_RECEIVETIMEOUT := 2000;
   end;
-  auto1 := TAutoFree.Several([
-    @data,    TDotClearTable.Parse(aFlatFile),
-    @urls,    TRawUtf8ListHashed.Create,
-    @batch,   TRestBatch.Create(Rest, TOrmTag, 5000)]);
+  auto1 := TAutoFree.Several([@data, TDotClearTable.Parse(aFlatFile), @urls, TRawUtf8ListHashed.Create,
+    @batch, TRestBatch.Create(rest, TOrmTag, 5000)]);
   auto2 := TOrm.AutoFree([ // avoid several try..finally
-    @info,    TOrmBlogInfo,
-    @article, TOrmArticle,
-    @comment, TOrmComment,
-    @tag,     TOrmTag]);
+    @info, TOrmBlogInfo, @Article, TOrmArticle, @comment, TOrmComment, @tag, TOrmTag]);
   T := data.GetObjectFrom('setting');
-  Rest.Retrieve('', info);
-  info.Copyright := VariantToUTF8(
-    T.GetValue('setting_id', 'copyright_notice', 'setting_value'));
+  rest.Retrieve('', info);
+  info.Copyright := VariantToUTF8(T.GetValue('setting_id', 'copyright_notice', 'setting_value'));
   if info.ID = 0 then
-    Rest.Add(info, true)
+    rest.Add(info, true)
   else
-    Rest.Update(info);
+    rest.Update(info);
   tagTable := data.GetObjectFrom('meta');
   tagsCount := 0;
   meta_id := tagTable.FieldIndexExisting('meta_id');
   meta_type := tagTable.FieldIndexExisting('meta_type');
   for r := 1 to tagTable.RowCount do
     if tagTable.GetU(r, meta_type) = 'tag' then
-      AddSortedRawUtf8(tags, tagsCount,
-        tagTable.GetU(r, meta_id), nil, -1, @StrIComp);
+      AddSortedRawUtf8(Tags, tagsCount, tagTable.GetU(r, meta_id), nil, -1, @StrIComp);
   for r := 0 to tagsCount - 1 do
   begin
-    tag.Ident := tags[r];
+    tag.Ident := Tags[r];
     batch.Add(tag, true);
   end;
-  Rest.BatchSend(batch, tagID);
-  aTagsLookup.Init(Rest); // reload after initial fill
+  rest.BatchSend(batch, tagID);
+  aTagsLookup.Init(rest); // reload after initial fill
   batch.Reset(TOrmArticle, 5000);
   tag_post_id := tagTable.FieldIndexExisting('post_id');
   T.SortFields(tag_post_id, true, nil, sftInteger);
@@ -775,40 +712,38 @@ begin
     repeat
       urls.Add(postTable.FieldBuffer(post_url));
     until not postTable.Step;
-  article.Author := TOrmAuthor(1);
-  article.AuthorName := 'synopse';
-  article.ContentHtml := true;
+  Article.Author := TOrmAuthor(1);
+  Article.AuthorName := 'synopse';
+  Article.ContentHtml := true;
   for r := 1 to postTable.RowCount do
   begin
-    article.Title := postTable.GetU(r, 'post_title');
-    article.abstract := FixLinks(postTable.Get(r, 'post_excerpt_xhtml'));
-    article.Content := FixLinks(postTable.Get(r, 'post_content_xhtml'));
-    if article.abstract = '' then
+    Article.Title := postTable.GetU(r, 'post_title');
+    Article.abstract := FixLinks(postTable.Get(r, 'post_excerpt_xhtml'));
+    Article.Content := FixLinks(postTable.Get(r, 'post_content_xhtml'));
+    if Article.abstract = '' then
     begin
-      article.abstract := article.Content;
-      article.Content := '';
+      Article.abstract := Article.Content;
+      Article.Content := '';
     end;
-    article.CreatedAt := Iso8601ToTimeLog(postTable.GetU(r, 'post_creadt'));
-    article.ModifiedAt := Iso8601ToTimeLog(postTable.GetU(r, 'post_upddt'));
-    article.SetPublishedMonth(article.CreatedAt);
+    Article.CreatedAt := Iso8601ToTimeLog(postTable.GetU(r, 'post_creadt'));
+    Article.ModifiedAt := Iso8601ToTimeLog(postTable.GetU(r, 'post_upddt'));
+    Article.SetPublishedMonth(Article.CreatedAt);
     postID := postTable.GetAsInteger(r, post_id);
-    article.Tags := nil;
+    Article.Tags := nil;
     if tagTable.Step(true) then
       repeat
         if tagTable.FieldAsInteger(tag_post_id) = postID then
         begin
-          ndx := FastFindPUtf8CharSorted(
-            pointer(tags), high(tags), tagTable.FieldBuffer(meta_id), @StrIComp);
+          ndx := FastFindPUtf8CharSorted(pointer(Tags), high(Tags), tagTable.FieldBuffer(meta_id), @StrIComp);
           if ndx >= 0 then
-            article.TagsAddOrdered(tagID[ndx], aTagsLookup);
+            Article.TagsAddOrdered(tagID[ndx], aTagsLookup);
         end;
       until not tagTable.Step;
-    batch.Add(article, true, false, [], true);
+    batch.Add(Article, true, false, [], true);
   end;
-  Rest.BatchSend(batch);
-  aTagsLookup.SaveOccurence(Rest);
+  rest.BatchSend(batch);
+  aTagsLookup.SaveOccurence(rest);
   writeln(#13#10'-- import finished!');
 end;
 
 end.
-

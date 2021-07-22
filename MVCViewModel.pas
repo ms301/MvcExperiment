@@ -53,6 +53,7 @@ type
       out Article: TOrmArticle);
     function ArticleCommit(ID: TID; const Title, Content: RawUtf8): TMvcAction;
     procedure SignIn();
+    procedure PreRegisterView(var Author: TOrmAuthor; out Services: variant);
   end;
 
   /// session information which will be stored on client side within a cookie
@@ -75,6 +76,7 @@ type
     fDefaultData: ILockedDocVariant;
     fDefaultLastID: TID;
     fHasFTS: boolean;
+    fSessionInfo: TCookieData;
     procedure ComputeMinimalData; virtual;
     procedure FlushAnyCache; override;
     procedure GetViewInfo(MethodIndex: integer; out info: variant); override;
@@ -84,8 +86,10 @@ type
   public
     procedure Start(aServer: TRest); reintroduce;
   public
+
     procedure Default(var Scope: variant);
     procedure SignIn();
+    procedure PreRegisterView(var Author: TOrmAuthor; out Services: variant);
     procedure ArticleView(ID: TID; var WithComments: boolean; Direction: integer; var Scope: variant;
       var Article: TOrmArticle; var Author: variant; var Comments: TObjectList);
     procedure AuthorView(var ID: TID; var Author: TOrmAuthor; out Articles: variant);
@@ -128,8 +132,8 @@ begin
     PublishOptions := PublishOptions - [cacheStatic];
     StaticCacheControlMaxAge := 60 * 30; // 30 minutes
   end;
-  (TMvcRunOnRestServer(fMainRunner).Views as TMvcViewsMustache).RegisterExpressionHelpers(['MonthToText'], [MonthToText]
-    ).RegisterExpressionHelpers(['TagToText'], [TagToText]);
+  (TMvcRunOnRestServer(fMainRunner).Views as TMvcViewsMustache).RegisterExpressionHelpers(['MonthToText'],
+    [MonthToText]).RegisterExpressionHelpers(['TagToText'], [TagToText]);
   ComputeMinimalData;
   aServer.orm.Cache.SetCache(TOrmAuthor);
   aServer.orm.Cache.SetCache(TOrmArticle);
@@ -146,8 +150,8 @@ end;
 
 procedure TBlogApplication.MonthToText(const Value: variant; out result: variant);
 const
-  MONTHS: array [0 .. 11] of RawUtf8 = ('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
-    'September', 'October', 'November', 'December');
+  MONTHS: array [0 .. 11] of RawUtf8 = ('January', 'February', 'March', 'April', 'May', 'June', 'July',
+    'August', 'September', 'October', 'November', 'December');
 var
   month: integer;
 begin
@@ -155,6 +159,11 @@ begin
     RawUtf8ToVariant(MONTHS[month mod 12] + ' ' + UInt32ToUTF8(month div 12), result)
   else
     SetVariantNull(result);
+end;
+
+procedure TBlogApplication.PreRegisterView;
+begin
+  RestModel.orm.Retrieve(fSessionInfo.AuthorID, Author);
 end;
 
 procedure TBlogApplication.TagToText(const Value: variant; out result: variant);
@@ -193,7 +202,8 @@ begin
     if tmp <> '' then
     begin
       info.Title := 'Synopse Blog';
-      info.Description := 'Articles, announcements, news, updates and more ' + 'about our Open Source projects';
+      info.Description := 'Articles, announcements, news, updates and more ' +
+        'about our Open Source projects';
       info.About := 'Latest information about Synopse Open Source librairies, ' +
         'mainly the mORMot ORM/SOA/MVC framework, and SynPDF.';
     end
@@ -203,9 +213,10 @@ begin
       info.Description := 'Sample Blog Web Application using Synopse mORMot 2 MVC';
       info.About := TSynTestCase.RandomTextParagraph(10, '!');
     end;
-    info.About := info.About + #13#10'Website powered by mORMot MVC ' + SYNOPSE_FRAMEWORK_VERSION + ', compiled with ' +
-      COMPILER_VERSION + ', running on ' + ToText(OSVersion32) + '.';
-    info.Copyright := '&copy;' + ToUTF8(CurrentYear) + '<a href=https://synopse.info>Synopse Informatique</a>';
+    info.About := info.About + #13#10'Website powered by mORMot MVC ' + SYNOPSE_FRAMEWORK_VERSION +
+      ', compiled with ' + COMPILER_VERSION + ', running on ' + ToText(OSVersion32) + '.';
+    info.Copyright := '&copy;' + ToUTF8(CurrentYear) +
+      '<a href=https://synopse.info>Synopse Informatique</a>';
     RestModel.orm.Add(info, True);
   end;
   if RestModel.orm.TableHasRows(TOrmArticle) then
@@ -265,8 +276,8 @@ var
   Author: TOrmAuthor;
 begin
   result := 0;
-  if (CurrentSession.CheckAndRetrieve(@SessionInfo, TypeInfo(TCookieData)) > 0) and (Right in SessionInfo.AuthorRights)
-  then
+  if (CurrentSession.CheckAndRetrieve(@SessionInfo, TypeInfo(TCookieData)) > 0) and
+    (Right in SessionInfo.AuthorRights) then
     with TOrmAuthor.AutoFree(Author, RestModel.orm, SessionInfo.AuthorID) do
       if Right in Author.Rights then
       begin
@@ -284,7 +295,8 @@ var
   archives: variant; // needed to circumvent memory leak bug on FPC
 begin
   inherited GetViewInfo(MethodIndex, info);
-  _ObjAddProps(['blog', fBlogMainInfo, 'session', CurrentSession.CheckAndRetrieveInfo(TypeInfo(TCookieData))], info);
+  _ObjAddProps(['blog', fBlogMainInfo, 'session',
+    CurrentSession.CheckAndRetrieveInfo(TypeInfo(TCookieData))], info);
   if not fDefaultData.AddExistingProp('archives', info) then
   begin
     archives := RestModel.orm.RetrieveDocVariantArray(TOrmArticle, '',
@@ -327,8 +339,8 @@ begin
     if scop^.GetAsDouble('lastrank', rank) then
       whereClause := 'and rank<? ';
     whereClause := 'join (select docid,rank(matchinfo(ArticleSearch),1.0,0.7,0.5) as rank ' +
-      'from ArticleSearch where ArticleSearch match ? ' + whereClause + 'order by rank desc' + ARTICLE_DEFAULT_LIMIT +
-      ')as r on (r.docid=Article.id)';
+      'from ArticleSearch where ArticleSearch match ? ' + whereClause + 'order by rank desc' +
+      ARTICLE_DEFAULT_LIMIT + ')as r on (r.docid=Article.id)';
     Articles := RestModel.orm.RetrieveDocVariantArray(TOrmArticle, '', whereClause, [Match, rank],
       'id,title,tags,author,authorname,createdat,abstract,contenthtml,rank');
     with _Safe(Articles)^ do
@@ -354,8 +366,8 @@ begin
   begin // use simple cache if no parameters
     if not fDefaultData.AddExistingProp('Articles', Scope) then
     begin
-      Articles := RestModel.orm.RetrieveDocVariantArray(TOrmArticle, '', ARTICLE_DEFAULT_ORDER, [], ARTICLE_FIELDS, nil,
-        @fDefaultLastID);
+      Articles := RestModel.orm.RetrieveDocVariantArray(TOrmArticle, '', ARTICLE_DEFAULT_ORDER, [],
+        ARTICLE_FIELDS, nil, @fDefaultLastID);
       fDefaultData.AddNewProp('Articles', Articles, Scope);
     end;
     lastID := fDefaultLastID;
@@ -371,8 +383,8 @@ begin
     _ObjAddProps(['lastID', lastID, 'tag', tag], Scope);
 end;
 
-procedure TBlogApplication.ArticleView(ID: TID; var WithComments: boolean; Direction: integer; var Scope: variant;
-  var Article: TOrmArticle; var Author: variant; var Comments: TObjectList);
+procedure TBlogApplication.ArticleView(ID: TID; var WithComments: boolean; Direction: integer;
+  var Scope: variant; var Article: TOrmArticle; var Author: variant; var Comments: TObjectList);
 var
   newID: Int64;
 const
@@ -380,12 +392,14 @@ const
 begin
   if Direction in [1, 2] then
     // allows fast paging using index on ID
-    if RestModel.orm.OneFieldValue(TOrmArticle, 'RowID', WHERE[Direction], [], [ID], newID) and (newID <> 0) then
+    if RestModel.orm.OneFieldValue(TOrmArticle, 'RowID', WHERE[Direction], [], [ID], newID) and (newID <> 0)
+    then
       ID := newID;
   RestModel.orm.Retrieve(ID, Article);
   if Article.ID <> 0 then
   begin
-    Author := RestModel.orm.RetrieveDocVariant(TOrmAuthor, 'RowID=?', [Article.Author.ID], 'FirstName,FamilyName');
+    Author := RestModel.orm.RetrieveDocVariant(TOrmAuthor, 'RowID=?', [Article.Author.ID],
+      'FirstName,FamilyName');
     if WithComments then
     begin
       Comments.Free; // we will override the TObjectList created at input
@@ -401,8 +415,8 @@ begin
   RestModel.orm.Retrieve(ID, Author);
   Author.HashedPassword := ''; // no need to publish it
   if Author.ID <> 0 then
-    Articles := RestModel.orm.RetrieveDocVariantArray(TOrmArticle, '', 'Author=? order by RowId desc limit 50', [ID],
-      ARTICLE_FIELDS)
+    Articles := RestModel.orm.RetrieveDocVariantArray(TOrmArticle, '',
+      'Author=? order by RowId desc limit 50', [ID], ARTICLE_FIELDS)
   else
     raise EMvcApplication.CreateGotoError(HTTP_NOTFOUND);
 end;
@@ -410,7 +424,6 @@ end;
 function TBlogApplication.Login(const LogonName, PlainPassword: RawUtf8): TMvcAction;
 var
   Author: TOrmAuthor;
-  SessionInfo: TCookieData;
 begin
   if CurrentSession.CheckAndRetrieve <> 0 then
   begin
@@ -421,10 +434,10 @@ begin
   try
     if (Author.ID <> 0) and Author.CheckPlainPassword(PlainPassword) then
     begin
-      SessionInfo.AuthorName := Author.LogonName;
-      SessionInfo.AuthorID := Author.ID;
-      SessionInfo.AuthorRights := Author.Rights;
-      CurrentSession.Initialize(@SessionInfo, TypeInfo(TCookieData));
+      fSessionInfo.AuthorName := Author.LogonName;
+      fSessionInfo.AuthorID := Author.ID;
+      fSessionInfo.AuthorRights := Author.Rights;
+      CurrentSession.Initialize(@fSessionInfo, TypeInfo(TCookieData));
       GotoDefault(result);
     end
     else
@@ -479,8 +492,8 @@ begin
     GotoView(result, 'Default', ['scope', _ObjFast(['match', Match])]);
 end;
 
-procedure TBlogApplication.ArticleEdit(var ID: TID; const Title, Content: RawUtf8; const ValidationError: variant;
-  out Article: TOrmArticle);
+procedure TBlogApplication.ArticleEdit(var ID: TID; const Title, Content: RawUtf8;
+  const ValidationError: variant; out Article: TOrmArticle);
 var
   AuthorID: PtrUInt;
 begin
@@ -536,7 +549,8 @@ initialization
 {$IFNDEF DELPHI2010}
 // manual definition mandatory only if Delphi 2010 RTTI is not available
 rtti.RegisterType(TypeInfo(TOrmAuthorRights));
-rtti.RegisterFromText(TypeInfo(TCookieData), 'AuthorName:RawUtf8 AuthorID:cardinal AuthorRights:TOrmAuthorRights');
+rtti.RegisterFromText(TypeInfo(TCookieData),
+  'AuthorName:RawUtf8 AuthorID:cardinal AuthorRights:TOrmAuthorRights');
 {$ENDIF DELPHI2010}
 
 end.
