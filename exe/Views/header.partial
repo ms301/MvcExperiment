@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="{{main.blog.language}}">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="ROBOTS" content="INDEX, FOLLOW" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="{{main.blog.description}}">
+    <meta name="copyright" content="{{{main.blog.copyright}}}" />
+    <meta name="author" content="{{#Author}}{{FirstName}}{{FamilyName}}{{/Author}}">
+
+
+    <title>{{pageTitle}}{{^pageTitle}}{{main.blog.title}} {{pageName}}{{/pageTitle}}</title>
+
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href=".static/plugins/fontawesome-free/css/all.min.css">
+    <!-- IonIcons -->
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <!-- Theme style -->
+    <link rel="stylesheet" href=".static/dist/css/adminlte.min.css">
+</head>
